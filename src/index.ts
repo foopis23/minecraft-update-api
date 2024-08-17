@@ -7,15 +7,26 @@ import swagger from "@elysiajs/swagger";
 // /latest/<type>
 const app = new Elysia()
   .use(rateLimit({ max: 10, duration: 60000 }))
-  .use(swagger({
-    path: "/docs",
-    documentation: {
-      info: {
-          title: 'Minecraft Version API',
-          version: '1.0.0'
-      }
-  }
-  }))
+  .use(
+    swagger({
+      path: "/docs",
+      documentation: {
+        info: {
+          title: "Minecraft Version API",
+          version: "1.0.0",
+        },
+        ...(process.env.SERVER_URL
+          ? {
+              servers: [
+                {
+                  url: process.env.SERVER_URL,
+                },
+              ],
+            }
+          : {}),
+      },
+    })
+  )
   .get(
     "/latest/:type",
     async ({ params, set }) => {
@@ -48,9 +59,10 @@ const app = new Elysia()
         type: t.Union([t.Literal("release"), t.Literal("snapshot")]),
       }),
       detail: {
-        description: "Download the latest Minecraft server jar for release or snapshot",
-      }
-    },
+        description:
+          "Download the latest Minecraft server jar for release or snapshot",
+      },
+    }
   )
   .get(
     "/latest/:type/details",
@@ -91,7 +103,7 @@ const app = new Elysia()
       }),
       detail: {
         description: "Get the details of the latest version of Minecraft",
-      }
+      },
     }
   )
   .get(
@@ -111,30 +123,34 @@ const app = new Elysia()
       }),
       detail: {
         description: "Download a specific version of the Minecraft server jar",
-      }
+      },
     }
   )
-  .get("/:version/details", async ({ params }) => {
-    const [error, versionDetails] = await getVersionDetails(params.version);
-    if (error) {
-      return error;
-    }
+  .get(
+    "/:version/details",
+    async ({ params }) => {
+      const [error, versionDetails] = await getVersionDetails(params.version);
+      if (error) {
+        return error;
+      }
 
-    return {
-      id: versionDetails.id,
-      type: versionDetails.type,
-      time: versionDetails.time,
-      releaseTime: versionDetails.releaseTime,
-      downloads: versionDetails.downloads,
-    };
-  }, {
-    params: t.Object({
-      version: t.String(),
-    }),
-    detail: {
-      description: "Get the details of a specific version of Minecraft",
+      return {
+        id: versionDetails.id,
+        type: versionDetails.type,
+        time: versionDetails.time,
+        releaseTime: versionDetails.releaseTime,
+        downloads: versionDetails.downloads,
+      };
+    },
+    {
+      params: t.Object({
+        version: t.String(),
+      }),
+      detail: {
+        description: "Get the details of a specific version of Minecraft",
+      },
     }
-  })
+  )
   .listen(process.env.PORT || 3000);
 
 console.log(
