@@ -1,6 +1,7 @@
 import { Value } from "@sinclair/typebox/value";
 import { Static, t } from "elysia";
 import { FetchError } from "./error";
+import { cache } from "./cache";
 
 const versionManifestSchema = t.Object({
   latest: t.Object({
@@ -39,7 +40,11 @@ export type Version = Static<typeof versionSchema>;
 export async function getVersionManifest(): Promise<
   [Error, null] | [null, VersionManifest]
 > {
-  // add cache
+  const manifest = cache.get("versionManifest");
+  if (manifest) {
+    return [null, manifest as VersionManifest];
+  }
+
   const result = await fetch(
     "https://launchermeta.mojang.com/mc/game/version_manifest.json"
   );
@@ -57,12 +62,19 @@ export async function getVersionManifest(): Promise<
     return [new Error("Invalid JSON"), null];
   }
 
+  cache.set("versionManifest", rawJson, 900);
+
   return [null, rawJson as VersionManifest];
 }
 
 export async function getVersionDetails(
   version: string
 ): Promise<[Error, null] | [null, Version]> {
+  const cached = cache.get(`version:${version}`);
+  if (cached) {
+    return [null, cached as Version];
+  }
+
   const [error, manifest] = await getVersionManifest();
   if (error) {
     return [error, null];
@@ -87,6 +99,8 @@ export async function getVersionDetails(
   if (!valid) {
     return [new Error("Invalid JSON"), null];
   }
+
+  cache.set(`version:${version}`, rawJson, 900);
 
   return [null, rawJson as Version];
 }

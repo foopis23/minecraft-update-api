@@ -1,9 +1,11 @@
 import { Elysia, redirect, t } from "elysia";
 import { getVersionDetails, getVersionManifest } from "./version";
+import { rateLimit } from "elysia-rate-limit";
 
 // /<version>
 // /latest/<type>
 const app = new Elysia()
+  .use(rateLimit({ max: 10, duration: 60000 }))
   .get("/", () => "Hello Elysia")
   .get(
     "/latest/:type",
