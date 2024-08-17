@@ -1,11 +1,21 @@
 import { Elysia, redirect, t } from "elysia";
 import { getVersionDetails, getVersionManifest } from "./version";
 import { rateLimit } from "elysia-rate-limit";
+import swagger from "@elysiajs/swagger";
 
 // /<version>
 // /latest/<type>
 const app = new Elysia()
   .use(rateLimit({ max: 10, duration: 60000 }))
+  .use(swagger({
+    path: "/docs",
+    documentation: {
+      info: {
+          title: 'Minecraft Version API',
+          version: '1.0.0'
+      }
+  }
+  }))
   .get(
     "/latest/:type",
     async ({ params, set }) => {
@@ -37,7 +47,10 @@ const app = new Elysia()
       params: t.Object({
         type: t.Union([t.Literal("release"), t.Literal("snapshot")]),
       }),
-    }
+      detail: {
+        description: "Download the latest Minecraft server jar for release or snapshot",
+      }
+    },
   )
   .get(
     "/latest/:type/details",
@@ -76,6 +89,9 @@ const app = new Elysia()
       params: t.Object({
         type: t.Union([t.Literal("release"), t.Literal("snapshot")]),
       }),
+      detail: {
+        description: "Get the details of the latest version of Minecraft",
+      }
     }
   )
   .get(
@@ -93,6 +109,9 @@ const app = new Elysia()
       params: t.Object({
         version: t.String(),
       }),
+      detail: {
+        description: "Download a specific version of the Minecraft server jar",
+      }
     }
   )
   .get("/:version/details", async ({ params }) => {
@@ -108,6 +127,13 @@ const app = new Elysia()
       releaseTime: versionDetails.releaseTime,
       downloads: versionDetails.downloads,
     };
+  }, {
+    params: t.Object({
+      version: t.String(),
+    }),
+    detail: {
+      description: "Get the details of a specific version of Minecraft",
+    }
   })
   .listen(process.env.PORT || 3000);
 
