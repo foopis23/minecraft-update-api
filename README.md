@@ -9,3 +9,6 @@ This is a simple API that allows you to get the latest version of Minecraft Serv
 ```bash
 bun run start
 ```
+
+## Deploy
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/xDMYoi?referralCode=ShtSlb)
