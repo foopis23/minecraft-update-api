@@ -15,7 +15,7 @@ const app = new Elysia()
         },
         externalDocs: {
           description: "GitHub",
-          url: "https://github.com/foopis23/minecraft-update-api"
+          url: "https://github.com/foopis23/minecraft-update-api",
         },
         ...(process.env.SERVER_URL
           ? {
@@ -29,8 +29,24 @@ const app = new Elysia()
       },
     })
   )
-  .group("/vanilla", (app) => 
+  .group("/vanilla", (app) =>
     app
+      .get("", async ({ set }) => {
+        const [error, manifest] = await getVersionManifest();
+        if (error) {
+          set.status = 500;
+          return error;
+        }
+
+        return manifest.versions.map((v) => {
+          return {
+            id: v.id,
+            type: v.type,
+            time: v.time,
+            releaseTime: v.releaseTime,
+          }
+        });
+      })
       .get(
         "/latest/:type",
         async ({ params, set }) => {
