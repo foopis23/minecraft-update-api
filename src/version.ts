@@ -20,6 +20,10 @@ const versionManifestSchema = t.Object({
 });
 
 const versionSchema = t.Object({
+  id: t.String(),
+  type: t.String(),
+  time: t.String(),
+  releaseTime: t.String(),
   downloads: t.Object({
     client: t.Object({
       sha1: t.String(),

@@ -6,7 +6,6 @@ import { rateLimit } from "elysia-rate-limit";
 // /latest/<type>
 const app = new Elysia()
   .use(rateLimit({ max: 10, duration: 60000 }))
-  .get("/", () => "Hello Elysia")
   .get(
     "/latest/:type",
     async ({ params, set }) => {
@@ -41,6 +40,45 @@ const app = new Elysia()
     }
   )
   .get(
+    "/latest/:type/details",
+    async ({ set, params }) => {
+      const [error, manifest] = await getVersionManifest();
+      if (error) {
+        set.status = 500;
+        return error;
+      }
+
+      const version = manifest.versions.find(
+        (v) => v.id === manifest.latest[params.type]
+      );
+
+      if (!version) {
+        set.status = 404;
+        return "Not found";
+      }
+
+      const [error2, versionDetails] = await getVersionDetails(version.id);
+
+      if (error2) {
+        set.status = 500;
+        return error2;
+      }
+
+      return {
+        id: versionDetails.id,
+        type: versionDetails.type,
+        time: versionDetails.time,
+        releaseTime: versionDetails.releaseTime,
+        downloads: versionDetails.downloads,
+      };
+    },
+    {
+      params: t.Object({
+        type: t.Union([t.Literal("release"), t.Literal("snapshot")]),
+      }),
+    }
+  )
+  .get(
     "/:version",
     async ({ params, set }) => {
       const [error, versionDetails] = await getVersionDetails(params.version);
@@ -57,8 +95,22 @@ const app = new Elysia()
       }),
     }
   )
-  .listen(3000);
+  .get("/:version/details", async ({ params }) => {
+    const [error, versionDetails] = await getVersionDetails(params.version);
+    if (error) {
+      return error;
+    }
+
+    return {
+      id: versionDetails.id,
+      type: versionDetails.type,
+      time: versionDetails.time,
+      releaseTime: versionDetails.releaseTime,
+      downloads: versionDetails.downloads,
+    };
+  })
+  .listen(process.env.PORT || 3000);
 
 console.log(
-  `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
+  `🦊 Minecraft Version API is running at ${app.server?.hostname}:${app.server?.port}`
 );
