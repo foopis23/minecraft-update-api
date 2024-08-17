@@ -3,10 +3,8 @@ import { getVersionDetails, getVersionManifest } from "./version";
 import { rateLimit } from "elysia-rate-limit";
 import swagger from "@elysiajs/swagger";
 
-// /<version>
-// /latest/<type>
 const app = new Elysia()
-  .use(rateLimit({ max: 10, duration: 60000 }))
+  .use(rateLimit({ max: 30, duration: 60000 }))
   .use(
     swagger({
       path: "/docs",
@@ -27,129 +25,137 @@ const app = new Elysia()
       },
     })
   )
-  .get(
-    "/latest/:type",
-    async ({ params, set }) => {
-      const [error, manifest] = await getVersionManifest();
-      if (error) {
-        set.status = 500;
-        return error;
-      }
+  .group("/vanilla", (app) => 
+    app
+      .get(
+        "/latest/:type",
+        async ({ params, set }) => {
+          const [error, manifest] = await getVersionManifest();
+          if (error) {
+            set.status = 500;
+            return error;
+          }
 
-      const version = manifest.versions.find(
-        (v) => v.id === manifest.latest[params.type]
-      );
+          const version = manifest.versions.find(
+            (v) => v.id === manifest.latest[params.type]
+          );
 
-      if (!version) {
-        set.status = 404;
-        return "Not found";
-      }
+          if (!version) {
+            set.status = 404;
+            return "Not found";
+          }
 
-      const [error2, versionDetails] = await getVersionDetails(version.id);
+          const [error2, versionDetails] = await getVersionDetails(version.id);
 
-      if (error2) {
-        set.status = 500;
-        return error2;
-      }
+          if (error2) {
+            set.status = 500;
+            return error2;
+          }
 
-      return redirect(versionDetails.downloads.server.url, 302);
-    },
-    {
-      params: t.Object({
-        type: t.Union([t.Literal("release"), t.Literal("snapshot")]),
-      }),
-      detail: {
-        description:
-          "Download the latest Minecraft server jar for release or snapshot",
-      },
-    }
-  )
-  .get(
-    "/latest/:type/details",
-    async ({ set, params }) => {
-      const [error, manifest] = await getVersionManifest();
-      if (error) {
-        set.status = 500;
-        return error;
-      }
+          return redirect(versionDetails.downloads.server.url, 302);
+        },
+        {
+          params: t.Object({
+            type: t.Union([t.Literal("release"), t.Literal("snapshot")]),
+          }),
+          detail: {
+            description:
+              "Download the latest Minecraft server jar for release or snapshot",
+          },
+        }
+      )
+      .get(
+        "/latest/:type/details",
+        async ({ set, params }) => {
+          const [error, manifest] = await getVersionManifest();
+          if (error) {
+            set.status = 500;
+            return error;
+          }
 
-      const version = manifest.versions.find(
-        (v) => v.id === manifest.latest[params.type]
-      );
+          const version = manifest.versions.find(
+            (v) => v.id === manifest.latest[params.type]
+          );
 
-      if (!version) {
-        set.status = 404;
-        return "Not found";
-      }
+          if (!version) {
+            set.status = 404;
+            return "Not found";
+          }
 
-      const [error2, versionDetails] = await getVersionDetails(version.id);
+          const [error2, versionDetails] = await getVersionDetails(version.id);
 
-      if (error2) {
-        set.status = 500;
-        return error2;
-      }
+          if (error2) {
+            set.status = 500;
+            return error2;
+          }
 
-      return {
-        id: versionDetails.id,
-        type: versionDetails.type,
-        time: versionDetails.time,
-        releaseTime: versionDetails.releaseTime,
-        downloads: versionDetails.downloads,
-      };
-    },
-    {
-      params: t.Object({
-        type: t.Union([t.Literal("release"), t.Literal("snapshot")]),
-      }),
-      detail: {
-        description: "Get the details of the latest version of Minecraft",
-      },
-    }
-  )
-  .get(
-    "/:version",
-    async ({ params, set }) => {
-      const [error, versionDetails] = await getVersionDetails(params.version);
-      if (error) {
-        set.status = 500;
-        return error;
-      }
+          return {
+            id: versionDetails.id,
+            type: versionDetails.type,
+            time: versionDetails.time,
+            releaseTime: versionDetails.releaseTime,
+            downloads: versionDetails.downloads,
+          };
+        },
+        {
+          params: t.Object({
+            type: t.Union([t.Literal("release"), t.Literal("snapshot")]),
+          }),
+          detail: {
+            description: "Get the details of the latest version of Minecraft",
+          },
+        }
+      )
+      .get(
+        "/:version",
+        async ({ params, set }) => {
+          const [error, versionDetails] = await getVersionDetails(
+            params.version
+          );
+          if (error) {
+            set.status = 500;
+            return error;
+          }
 
-      return redirect(versionDetails.downloads.server.url, 302);
-    },
-    {
-      params: t.Object({
-        version: t.String(),
-      }),
-      detail: {
-        description: "Download a specific version of the Minecraft server jar",
-      },
-    }
-  )
-  .get(
-    "/:version/details",
-    async ({ params }) => {
-      const [error, versionDetails] = await getVersionDetails(params.version);
-      if (error) {
-        return error;
-      }
+          return redirect(versionDetails.downloads.server.url, 302);
+        },
+        {
+          params: t.Object({
+            version: t.String(),
+          }),
+          detail: {
+            description:
+              "Download a specific version of the Minecraft server jar",
+          },
+        }
+      )
+      .get(
+        "/:version/details",
+        async ({ params }) => {
+          const [error, versionDetails] = await getVersionDetails(
+            params.version
+          );
+          if (error) {
+            return error;
+          }
 
-      return {
-        id: versionDetails.id,
-        type: versionDetails.type,
-        time: versionDetails.time,
-        releaseTime: versionDetails.releaseTime,
-        downloads: versionDetails.downloads,
-      };
-    },
-    {
-      params: t.Object({
-        version: t.String(),
-      }),
-      detail: {
-        description: "Get the details of a specific version of Minecraft",
-      },
-    }
+          return {
+            id: versionDetails.id,
+            type: versionDetails.type,
+            time: versionDetails.time,
+            releaseTime: versionDetails.releaseTime,
+            downloads: versionDetails.downloads,
+          };
+        },
+        {
+          params: t.Object({
+            version: t.String(),
+          }),
+          detail: {
+            description: "Get the details of a specific version of Minecraft",
+          },
+        }
+      )
   )
   .listen(process.env.PORT || 3000);
 
