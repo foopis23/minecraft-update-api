@@ -1,5 +1,4 @@
 import { Elysia, redirect, t } from "elysia";
-import { Value } from "@sinclair/typebox/value";
 import { getVersionDetails, getVersionManifest } from "./version";
 
 // /<version>
