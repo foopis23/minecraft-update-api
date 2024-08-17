@@ -13,6 +13,10 @@ const app = new Elysia()
           title: "Minecraft Version API",
           version: "1.0.0",
         },
+        externalDocs: {
+          description: "GitHub",
+          url: "https://github.com/foopis23/minecraft-update-api"
+        },
         ...(process.env.SERVER_URL
           ? {
               servers: [

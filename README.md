@@ -1,15 +1,11 @@
-# Elysia with Bun runtime
+# Minecraft Update API
 
-## Getting Started
-To get started with this template, simply paste this command into your terminal:
+This is a simple API that allows you to get the latest version of Minecraft Server Jar.
+
+## Documentation
+- [API Documentation](https://minecraft-update-api-production.up.railway.app/docs)
+
+## Running the API
 ```bash
-bun create elysia ./elysia-example
+bun run start
 ```
-
-## Development
-To start the development server run:
-```bash
-bun run dev
-```
-
-Open http://localhost:3000/ with your browser to see the result.
