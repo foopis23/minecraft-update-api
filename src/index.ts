@@ -3,8 +3,10 @@ import { getVersionDetails, getVersionManifest } from "./version";
 import { rateLimit } from "elysia-rate-limit";
 import swagger from "@elysiajs/swagger";
 
+const REQUEST_PER_MINUTE = 20;
+
 const app = new Elysia()
-  .use(rateLimit({ max: 20, duration: 60000 }))
+  .use(rateLimit({ max: REQUEST_PER_MINUTE, duration: 60000 }))
   .use(
     swagger({
       path: "/docs",
@@ -12,6 +14,7 @@ const app = new Elysia()
         info: {
           title: "Minecraft Version API",
           version: "1.0.0",
+          description: `This is a simple API that allows you to keep your server up to date with the latest server jar. There is a rate limit of ${REQUEST_PER_MINUTE} requests per minute.`,
         },
         externalDocs: {
           description: "GitHub",
