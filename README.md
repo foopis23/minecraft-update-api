@@ -1,6 +1,6 @@
 # Minecraft Server Versions API
 
-This is a simple API that allows you to get the latest version of Minecraft Server Jar.
+This is a simple API that allows you to keep your server up to date with the latest server jar
 
 ## Documentation
 - [API Documentation](https://minecraft-update-api-production.up.railway.app/docs)
