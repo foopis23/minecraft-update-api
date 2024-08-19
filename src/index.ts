@@ -2,6 +2,7 @@ import { Elysia, redirect, t } from "elysia";
 import { getVersionDetails, getVersionManifest } from "./version";
 import { rateLimit } from "elysia-rate-limit";
 import swagger from "@elysiajs/swagger";
+import { errorResponse, errorResponseSchema } from "./error";
 
 const REQUEST_PER_MINUTE = 20;
 
@@ -38,7 +39,7 @@ const app = new Elysia()
         const [error, manifest] = await getVersionManifest();
         if (error) {
           set.status = 500;
-          return error;
+          return errorResponse(error, 500);
         }
 
         return manifest.versions.map((v) => {
@@ -49,6 +50,18 @@ const app = new Elysia()
             releaseTime: v.releaseTime,
           }
         });
+      }, {
+        response: {
+          200: t.Array(
+            t.Object({
+              id: t.String(),
+              type: t.String(),
+              time: t.String(),
+              releaseTime: t.String(),
+            })
+          ),
+          500: errorResponseSchema,
+        }
       })
       .get(
         "/latest/:type",
@@ -56,7 +69,7 @@ const app = new Elysia()
           const [error, manifest] = await getVersionManifest();
           if (error) {
             set.status = 500;
-            return error;
+            return errorResponse(error, 500);
           }
 
           const version = manifest.versions.find(
@@ -65,14 +78,14 @@ const app = new Elysia()
 
           if (!version) {
             set.status = 404;
-            return "Not found";
+            return errorResponse(new Error("Not found"), 404);
           }
 
           const [error2, versionDetails] = await getVersionDetails(version.id);
 
           if (error2) {
             set.status = 500;
-            return error2;
+            return errorResponse(error2, 500);
           }
 
           return redirect(versionDetails.downloads.server.url, 302);
@@ -85,6 +98,11 @@ const app = new Elysia()
             description:
               "Download the latest Minecraft server jar for release or snapshot",
           },
+          response: {
+            302: t.String(),
+            404: errorResponseSchema,
+            500: errorResponseSchema,
+          }
         }
       )
       .get(
@@ -93,7 +111,7 @@ const app = new Elysia()
           const [error, manifest] = await getVersionManifest();
           if (error) {
             set.status = 500;
-            return error;
+            return errorResponse(error, 500);
           }
 
           const version = manifest.versions.find(
@@ -102,14 +120,14 @@ const app = new Elysia()
 
           if (!version) {
             set.status = 404;
-            return "Not found";
+            return errorResponse(new Error("Not found"), 404);
           }
 
           const [error2, versionDetails] = await getVersionDetails(version.id);
 
           if (error2) {
             set.status = 500;
-            return error2;
+            return errorResponse(error2, 500);
           }
 
           return {
@@ -127,6 +145,23 @@ const app = new Elysia()
           detail: {
             description: "Get the details of the latest version of Minecraft",
           },
+          response: {
+            200: t.Object({
+              id: t.String(),
+              type: t.String(),
+              time: t.String(),
+              releaseTime: t.String(),
+              downloads: t.Object({
+                server: t.Object({
+                  url: t.String(),
+                  size: t.Number(),
+                  sha1: t.String(),
+                }),
+              }),
+            }),
+            404: errorResponseSchema,
+            500: errorResponseSchema,
+          }
         }
       )
       .get(
@@ -137,7 +172,7 @@ const app = new Elysia()
           );
           if (error) {
             set.status = 500;
-            return error;
+            return errorResponse(error, 500);
           }
 
           return redirect(versionDetails.downloads.server.url, 302);
@@ -150,6 +185,10 @@ const app = new Elysia()
             description:
               "Download a specific version of the Minecraft server jar",
           },
+          response: {
+            302: t.String(),
+            500: errorResponseSchema,
+          }
         }
       )
       .get(
@@ -159,7 +198,7 @@ const app = new Elysia()
             params.version
           );
           if (error) {
-            return error;
+            return errorResponse(error, 500);
           }
 
           return {
@@ -177,6 +216,22 @@ const app = new Elysia()
           detail: {
             description: "Get the details of a specific version of Minecraft",
           },
+          response: {
+            200: t.Object({
+              id: t.String(),
+              type: t.String(),
+              time: t.String(),
+              releaseTime: t.String(),
+              downloads: t.Object({
+                server: t.Object({
+                  url: t.String(),
+                  size: t.Number(),
+                  sha1: t.String(),
+                }),
+              }),
+            }),
+            500: errorResponseSchema,
+          }
         }
       )
   )
