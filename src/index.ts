@@ -4,7 +4,7 @@ import { rateLimit } from "elysia-rate-limit";
 import swagger from "@elysiajs/swagger";
 
 const app = new Elysia()
-  .use(rateLimit({ max: 30, duration: 60000 }))
+  .use(rateLimit({ max: 20, duration: 60000 }))
   .use(
     swagger({
       path: "/docs",
