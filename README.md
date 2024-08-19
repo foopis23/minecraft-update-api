@@ -1,4 +1,4 @@
-# Minecraft Update API
+# Minecraft Server Versions API
 
 This is a simple API that allows you to get the latest version of Minecraft Server Jar.
 
